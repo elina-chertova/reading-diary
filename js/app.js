@@ -63,9 +63,20 @@ window.addEventListener('hashchange', renderRoute);
 window.__deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); window.__deferredPrompt = e; });
 
+// Просим браузер не удалять данные приложения при нехватке места.
+async function requestPersistentStorage() {
+  try {
+    if (navigator.storage && navigator.storage.persist) {
+      const already = await navigator.storage.persisted();
+      if (!already) await navigator.storage.persist();
+    }
+  } catch (e) { /* не поддерживается — не страшно */ }
+}
+
 async function boot() {
   await ensureSeeded();
   await renderRoute();
+  requestPersistentStorage();
   if ('serviceWorker' in navigator) {
     try { await navigator.serviceWorker.register('./sw.js'); } catch (e) { console.warn('SW не зарегистрирован', e); }
   }

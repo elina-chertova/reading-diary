@@ -18,6 +18,10 @@ export async function settings() {
         </div>
 
         <div class="card" style="padding:0;margin-top:12px">
+          <div class="set-row" id="set-storage"><i class="ti ti-shield-lock lead"></i><div style="flex:1"><div>Постоянное хранилище</div><div class="muted" style="font-size:12px" id="storage-status">Проверяю…</div></div><span id="storage-action"></span></div>
+        </div>
+
+        <div class="card" style="padding:0;margin-top:12px">
           <div class="set-row" id="set-install"><i class="ti ti-device-mobile lead"></i><div><div>Установить на телефон</div><div class="muted" style="font-size:12px">Как добавить иконку на экран</div></div><i class="ti ti-chevron-right chev"></i></div>
           <div class="set-row" id="set-about"><i class="ti ti-info-circle lead"></i><div><div>О приложении</div></div><i class="ti ti-chevron-right chev"></i></div>
         </div>
@@ -30,6 +34,36 @@ export async function settings() {
 
   const mount = (root) => {
     root.querySelector('[data-back]').addEventListener('click', () => history.back());
+
+    // статус постоянного хранилища
+    const statusEl = root.querySelector('#storage-status');
+    const actionEl = root.querySelector('#storage-action');
+    const refreshStorage = async () => {
+      if (!(navigator.storage && navigator.storage.persisted)) {
+        statusEl.textContent = 'Не поддерживается этим браузером';
+        return;
+      }
+      const persisted = await navigator.storage.persisted();
+      let used = '';
+      try {
+        const est = await navigator.storage.estimate();
+        if (est.usage) used = ` · занято ${(est.usage / 1048576).toFixed(1)} МБ`;
+      } catch {}
+      if (persisted) {
+        statusEl.innerHTML = `<span style="color:var(--green)">Включено ✓</span>${used}`;
+        actionEl.innerHTML = '';
+      } else {
+        statusEl.innerHTML = `Выключено${used}`;
+        actionEl.innerHTML = `<button class="btn sm" id="storage-on" style="width:auto">Включить</button>`;
+        actionEl.querySelector('#storage-on').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          try { await navigator.storage.persist(); } catch {}
+          await refreshStorage();
+          toast('Готово');
+        });
+      }
+    };
+    refreshStorage();
 
     root.querySelector('#set-export').addEventListener('click', async () => {
       const data = await exportAll();
