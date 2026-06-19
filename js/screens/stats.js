@@ -6,6 +6,7 @@ import { refresh } from '../actions.js';
 
 let tab = 'pages';
 let pagesMode = 'months';
+let insightsOpen = false;
 
 // Рисует график в карточку и вешает тапы: по тапу выделяет точку и показывает значение.
 function drawChart(card, type, series, labels, unit) {
@@ -38,7 +39,11 @@ export async function stats() {
         <div class="topbar-actions"><span class="pill">${st.year}</span></div>
       </div>
       <div class="content">
-        <div class="stack" style="margin-bottom:6px">${insightsHTML}</div>
+        <button class="collapse-head ${insightsOpen ? 'open' : ''}" id="ins-toggle">
+          <i class="ti ti-bulb lead"></i> Наблюдения <span class="cnt">${st.insights.length}</span>
+          <i class="ti ti-chevron-down chev"></i>
+        </button>
+        <div class="stack" id="ins-body" style="margin-top:10px;margin-bottom:6px;display:${insightsOpen ? 'block' : 'none'}">${insightsHTML}</div>
         <div class="seg" id="st-tabs" style="margin:18px 0 14px">
           <button data-tab="books" class="${tab === 'books' ? 'on' : ''}">Книги</button>
           <button data-tab="pages" class="${tab === 'pages' ? 'on' : ''}">Страницы</button>
@@ -58,6 +63,13 @@ export async function stats() {
   const mount = (root) => {
     const renderBody = () => { root.querySelector('#st-body').innerHTML = body(st); wireBody(root, st); };
     renderBody();
+    const insToggle = root.querySelector('#ins-toggle');
+    const insBody = root.querySelector('#ins-body');
+    insToggle.addEventListener('click', () => {
+      insightsOpen = !insightsOpen;
+      insBody.style.display = insightsOpen ? 'block' : 'none';
+      insToggle.classList.toggle('open', insightsOpen);
+    });
     root.querySelectorAll('#st-tabs button').forEach((btn) => btn.addEventListener('click', () => {
       tab = btn.dataset.tab;
       root.querySelectorAll('#st-tabs button').forEach((x) => x.classList.toggle('on', x === btn));

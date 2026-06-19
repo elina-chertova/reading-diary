@@ -184,6 +184,14 @@ input, select, textarea { font-family: inherit; }
 .grid .gc .t { font-size: 11.5px; margin-top: 6px; line-height: 1.25; font-weight: 500; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .grid .gc .a { font-size: 10px; color: var(--muted); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* collapsible header (e.g. наблюдения) */
+.collapse-head { width: 100%; display: flex; align-items: center; gap: 9px; background: var(--bg-card); border: none; color: var(--txt); padding: 14px; border-radius: var(--radius); font-size: 15px; font-weight: 500; cursor: pointer; transition: background .15s; }
+.collapse-head:active { background: var(--bg-card-2); }
+.collapse-head .lead { color: var(--acc-2); font-size: 19px; }
+.collapse-head .cnt { color: var(--muted); font-size: 13px; font-weight: 400; }
+.collapse-head .chev { margin-left: auto; color: var(--muted); transition: transform .22s; }
+.collapse-head.open .chev { transform: rotate(180deg); }
+
 /* insight cards */
 .insight { display: flex; gap: 11px; align-items: flex-start; }
 .insight .ic { width: 34px; height: 34px; border-radius: 10px; background: var(--acc-soft); color: var(--acc-2); display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }

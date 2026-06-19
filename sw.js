@@ -1,5 +1,5 @@
 // Service worker: офлайн-кэш и установка как приложение.
-const VERSION = 'v14';
+const VERSION = 'v15';
 const SHELL = `shell-${VERSION}`;
 const RUNTIME = `runtime-${VERSION}`;
 
