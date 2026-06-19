@@ -1,13 +1,12 @@
 import { getBook, saveBook, getSettings } from '../store.js';
 import { searchBooks, resolveCover, blobToDataURL } from '../covers.js';
-import { coverHTML, esc, go, toast, STATUSES, FORMATS } from '../ui.js';
+import { coverHTML, esc, go, toast, STATUSES, FORMATS, GENRES } from '../ui.js';
 
 let searchTimer = null;
 
 export async function edit(params) {
   const isEdit = !!params.id;
   const settings = await getSettings();
-  const genres = settings.genres?.length ? settings.genres : ['Без жанра'];
   const b = isEdit ? await getBook(params.id) : {
     title: '', author: '', genre: 'Без жанра', format: 'Печатная', status: 'Читаю',
     unit: 'pages', total: null, current: 0, rating: null, dateStart: new Date().toISOString(),
@@ -15,6 +14,9 @@ export async function edit(params) {
   };
   const dateVal = b.dateStart ? new Date(b.dateStart).toISOString().slice(0, 10) : '';
   const info = b.info || {};
+  // большой список жанров + любые пользовательские/уже использованные
+  const allGenres = new Set(['Без жанра', ...GENRES, ...(settings.genres || []), b.genre].filter(Boolean));
+  const genres = ['Без жанра', ...[...allGenres].filter((g) => g !== 'Без жанра').sort((a, c) => a.localeCompare(c, 'ru'))];
 
   const html = `
     <div class="screen">
