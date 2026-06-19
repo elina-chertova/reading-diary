@@ -53,13 +53,24 @@ export async function settings() {
         statusEl.innerHTML = `<span style="color:var(--green)">Включено ✓</span>${used}`;
         actionEl.innerHTML = '';
       } else {
-        statusEl.innerHTML = `Выключено${used}`;
-        actionEl.innerHTML = `<button class="btn sm" id="storage-on" style="width:auto">Включить</button>`;
+        statusEl.innerHTML = `<span style="color:var(--green)">Данные сохраняются</span> · обычный режим${used}`;
+        actionEl.innerHTML = `<button class="btn sm" id="storage-on" style="width:auto">Сделать постоянным</button>`;
         actionEl.querySelector('#storage-on').addEventListener('click', async (e) => {
           e.stopPropagation();
-          try { await navigator.storage.persist(); } catch {}
-          await refreshStorage();
-          toast('Готово');
+          let ok = false;
+          try { ok = await navigator.storage.persist(); } catch {}
+          if (ok) { await refreshStorage(); toast('Включено ✓'); }
+          else {
+            sheet(`<h3>Как сделать хранилище постоянным</h3>
+              <div style="font-size:14px;line-height:1.6;margin-top:8px" class="muted">
+                Сейчас данные <b style="color:var(--txt)">уже сохраняются</b> — приложение работает в обычном режиме, и при закрытии ничего не теряется.<br><br>
+                Чтобы браузер дал <b style="color:var(--txt)">гарантию</b> (не удалять данные даже при нехватке места), он включает «постоянный» режим автоматически, когда приложение <b style="color:var(--txt)">установлено на экран «Домой»</b>:<br><br>
+                <b style="color:var(--txt)">Android, Chrome:</b> меню ⋮ → «Установить приложение» / «Добавить на главный экран».<br>
+                <b style="color:var(--txt)">Firefox:</b> меню → «Установить» (или разрешите запрос хранилища, если появится).<br>
+                <b style="color:var(--txt)">iPhone, Safari:</b> «Поделиться» → «На экран Домой».<br><br>
+                После установки откройте это окно снова — будет «Включено ✓».
+              </div>`);
+          }
         });
       }
     };
