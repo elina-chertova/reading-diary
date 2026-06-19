@@ -33,21 +33,32 @@ function parseHash() {
   return { screen: home, params: {} };
 }
 
+// запоминаем позицию прокрутки для каждого экрана, чтобы «назад» возвращал на то же место
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+const scrollPositions = {};
+let currentHash = location.hash || '#/';
+window.addEventListener('scroll', () => { scrollPositions[currentHash] = window.scrollY; }, { passive: true });
+
 let rendering = false;
 async function renderRoute() {
   if (rendering) return;
   rendering = true;
+  const targetHash = location.hash || '#/';
   const { screen, params } = parseHash();
   try {
     const { html, mount } = await screen(params);
     app.innerHTML = html;
-    window.scrollTo(0, 0);
+    currentHash = targetHash;
     mount?.(app);
+    const saved = scrollPositions[targetHash] || 0;
+    requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, saved)));
   } catch (e) {
     console.error('Ошибка экрана', e);
     app.innerHTML = `<div class="screen"><div class="empty"><i class="ti ti-alert-triangle"></i>Что-то пошло не так<br><span style="font-size:12px">${e.message}</span></div></div>`;
   }
   rendering = false;
+  // если за время рендера адрес сменился (быстрые тапы) — дорисуем актуальный экран
+  if ((location.hash || '#/') !== targetHash) renderRoute();
 }
 window.__refresh = renderRoute;
 
