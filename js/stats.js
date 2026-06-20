@@ -186,9 +186,11 @@ export function predictFinish(book) {
   if (!book.total || !book.current || book.current >= book.total || !book.dateStart) return null;
   const days = Math.max(1, (Date.now() - new Date(book.dateStart)) / DAY);
   const ppd = book.current / days;
-  if (ppd <= 0) return null;
+  // средний темп меньше страницы в день — прогноз бессмысленный (книгу давно начали и почти не читают)
+  if (ppd < 1) return null;
   const remaining = book.total - book.current;
   const daysLeft = Math.ceil(remaining / ppd);
+  if (daysLeft > 400) return null; // слишком далеко — не показываем
   return { ppd: Math.round(ppd), daysLeft, remaining };
 }
 

@@ -57,6 +57,7 @@ export async function setBookProgress(book, newCurrent) {
     if (!book.dateEnd) book.dateEnd = new Date().toISOString();
   }
   if (!book.dateStart) book.dateStart = new Date().toISOString();
+  book.lastRead = new Date().toISOString(); // запоминаем, что эту книгу трогали последней
   await saveBook(book);
   if (delta > 0) await addPages(todayISO(), delta);
   return book;
