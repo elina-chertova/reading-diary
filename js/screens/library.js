@@ -50,10 +50,8 @@ export async function library() {
       const q = query.toLowerCase();
       list = list.filter((b) => (b.title + ' ' + b.author).toLowerCase().includes(q));
     }
-    // дата для группировки: завершение (если прочитана) или начало
-    const refDate = (b) => b.dateEnd || b.dateStart || null;
-    // сортируем по дате — новые сверху; без даты — в конец
-    list = [...list].sort((a, b) => String(refDate(b) || '').localeCompare(String(refDate(a) || '')));
+    const refDate = (b) => b.dateEnd || b.dateStart || null;            // для группировки по годам
+    const activity = (b) => b.lastRead || b.dateStart || '';            // давность чтения
 
     const grid = root.querySelector('#lib-grid');
     if (!list.length) {
@@ -68,25 +66,42 @@ export async function library() {
         : `<div class="empty"><i class="ti ti-books"></i>Ничего не найдено</div>`;
       return;
     }
-    // разбивка по годам с заголовками
-    let lastYear = null;
-    const rows = list.map((b) => {
-      const rd = refDate(b);
-      const yearLabel = rd ? new Date(rd).getFullYear() : 'Без даты';
-      let head = '';
-      if (yearLabel !== lastYear) { head = `<div class="year-head">${yearLabel}</div>`; lastYear = yearLabel; }
-      return `${head}
-        <div class="lrow" data-book="${b.id}">
-          ${coverHTML(b)}
-          <div class="lr-main">
-            <div class="lr-title">${esc(b.title)}</div>
-            <div class="lr-author">${esc(b.author)}</div>
-            <div class="lr-meta">${metaLine(b)}</div>
-            ${b.status === 'Читаю' || b.status === 'Брошено' ? `<div class="bar lr-bar"><span style="width:${progress(b)}%"></span></div>` : ''}
-          </div>
-          <button class="lrow-edit" data-edit="${b.id}" aria-label="Изменить прогресс"><i class="ti ti-edit"></i></button>
-        </div>`;
-    }).join('');
+
+    const rowHTML = (b) => `
+      <div class="lrow" data-book="${b.id}">
+        ${coverHTML(b)}
+        <div class="lr-main">
+          <div class="lr-title">${esc(b.title)}</div>
+          <div class="lr-author">${esc(b.author)}</div>
+          <div class="lr-meta">${metaLine(b)}</div>
+          ${b.status === 'Читаю' || b.status === 'Брошено' ? `<div class="bar lr-bar"><span style="width:${progress(b)}%"></span></div>` : ''}
+        </div>
+        <button class="lrow-edit" data-edit="${b.id}" aria-label="Изменить прогресс"><i class="ti ti-edit"></i></button>`
+      + `</div>`;
+    // книги по годам (новые сверху), с заголовком года
+    const byYear = (arr) => {
+      let lastYear = null, out = '';
+      for (const b of [...arr].sort((a, c) => String(refDate(c) || '').localeCompare(String(refDate(a) || '')))) {
+        const rd = refDate(b);
+        const yl = rd ? new Date(rd).getFullYear() : 'Без даты';
+        if (yl !== lastYear) { out += `<div class="year-head">${yl}</div>`; lastYear = yl; }
+        out += rowHTML(b);
+      }
+      return out;
+    };
+    // «Читаю» по давности: самые заброшенные сверху, свежие — внизу секции
+    const readingAsc = (arr) => [...arr].sort((a, c) => String(activity(a)).localeCompare(String(activity(c)))).map(rowHTML).join('');
+
+    let rows;
+    if (filter === 'Читаю') {
+      rows = readingAsc(list);
+    } else if (filter === 'Все') {
+      const reading = list.filter((b) => b.status === 'Читаю');
+      const others = list.filter((b) => b.status !== 'Читаю');
+      rows = (reading.length ? `<div class="year-head reading-head">Читаю</div>${readingAsc(reading)}` : '') + byYear(others);
+    } else {
+      rows = byYear(list);
+    }
     grid.innerHTML = `<div class="list">${rows}</div>`;
     grid.querySelectorAll('.lrow').forEach((c) => c.addEventListener('click', () => go(`#/book/${c.dataset.book}`)));
     grid.querySelectorAll('[data-edit]').forEach((btn) => btn.addEventListener('click', (e) => {

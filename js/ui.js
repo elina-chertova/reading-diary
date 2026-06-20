@@ -121,8 +121,23 @@ export function sheet(innerHTML) {
   bg.className = 'sheet-bg';
   bg.innerHTML = `<div class="sheet"><div class="grip"></div>${innerHTML}</div>`;
   document.body.appendChild(bg);
+  const sheetEl = bg.querySelector('.sheet');
   requestAnimationFrame(() => bg.classList.add('show'));
-  const close = () => { bg.classList.remove('show'); setTimeout(() => bg.remove(), 250); };
+
+  // поднимаем окно над экранной клавиатурой
+  const vv = window.visualViewport;
+  const adjust = () => {
+    if (!vv) return;
+    const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    sheetEl.style.transform = kb > 80 ? `translateY(-${kb}px)` : '';
+  };
+  if (vv) { vv.addEventListener('resize', adjust); vv.addEventListener('scroll', adjust); }
+
+  const close = () => {
+    if (vv) { vv.removeEventListener('resize', adjust); vv.removeEventListener('scroll', adjust); }
+    bg.classList.remove('show');
+    setTimeout(() => bg.remove(), 250);
+  };
   bg.addEventListener('click', (e) => { if (e.target === bg) close(); });
   return { el: bg, close };
 }
