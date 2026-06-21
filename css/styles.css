@@ -248,6 +248,12 @@ select.input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://ww
 .kv > div { display: flex; justify-content: space-between; padding: 7px 0; }
 .kv > div + div { border-top: .5px solid var(--line); }
 .quote { font-family: ui-serif, Georgia, serif; font-style: italic; color: var(--txt-2); line-height: 1.55; font-size: 14px; }
+.quote-card { cursor: pointer; transition: background .12s; }
+.quote-card:active { background: var(--bg-card-2); }
+.quote-note { font-size: 13px; color: var(--muted); margin-top: 10px; line-height: 1.45; display: flex; gap: 7px; }
+.quote-note i { color: var(--acc-2); font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+.quote-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+.quote-del { width: 30px; height: 30px; font-size: 15px; }
 
 /* empty state */
 .empty { text-align: center; color: var(--muted); padding: 60px 20px; }

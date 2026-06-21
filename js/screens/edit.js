@@ -1,4 +1,4 @@
-import { getBook, saveBook, getSettings } from '../store.js';
+import { getBook, saveBook, getSettings, addPages } from '../store.js';
 import { searchBooks, resolveCover, blobToDataURL } from '../covers.js';
 import { coverHTML, esc, go, toast, STATUSES, FORMATS, GENRES } from '../ui.js';
 
@@ -52,14 +52,8 @@ export async function edit(params) {
         </div>
         <div class="field"><label>Тип</label><select class="input" id="f-format">${FORMATS.map((s) => `<option ${s === b.format ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
 
-        <div class="field"><label>Веду прогресс по</label>
-          <div class="seg" id="f-unit">
-            <button data-unit="pages" class="${b.unit !== 'chapters' ? 'on' : ''}">Страницам</button>
-            <button data-unit="chapters" class="${b.unit === 'chapters' ? 'on' : ''}">Главам</button>
-          </div>
-        </div>
         <div class="two">
-          <div class="field"><label>Всего</label><input class="input" id="f-total" type="number" inputmode="numeric" value="${b.total ?? ''}" /></div>
+          <div class="field"><label>Всего страниц</label><input class="input" id="f-total" type="number" inputmode="numeric" value="${b.total ?? ''}" /></div>
           <div class="field"><label>Прочитано</label><input class="input" id="f-current" type="number" inputmode="numeric" value="${b.current ?? 0}" /></div>
         </div>
         <div class="field"><label>Дата начала</label><input class="input" id="f-date" type="date" value="${dateVal}" /></div>
@@ -78,7 +72,6 @@ export async function edit(params) {
 
   const mount = (root) => {
     let cover = b.cover || null;
-    let unit = b.unit || 'pages';
 
     root.querySelector('[data-back]').addEventListener('click', () => history.back());
 
@@ -97,12 +90,6 @@ export async function edit(params) {
       setCover(dataUrl, getFormValues());
       toast('Обложка загружена');
     });
-
-    // unit toggle
-    root.querySelectorAll('#f-unit button').forEach((btn) => btn.addEventListener('click', () => {
-      unit = btn.dataset.unit;
-      root.querySelectorAll('#f-unit button').forEach((x) => x.classList.toggle('on', x === btn));
-    }));
 
     // авто-поиск
     const lookup = root.querySelector('#lookup');
@@ -156,7 +143,7 @@ export async function edit(params) {
         author: root.querySelector('#f-author').value.trim(),
         genre: root.querySelector('#f-genre').value,
         format: root.querySelector('#f-format').value,
-        status, unit, total, current,
+        status, unit: 'pages', total, current,
         cover,
         dateStart: dateStr ? new Date(dateStr).toISOString() : b.dateStart,
         dateEnd: status === 'Прочитано' ? (b.dateEnd || new Date().toISOString()) : (status === 'Читаю' ? null : b.dateEnd),
@@ -170,6 +157,11 @@ export async function edit(params) {
         lastRead: new Date().toISOString(),
       };
       const id = await saveBook(next);
+      // новая книга с уже прочитанными страницами → добавим их в трекер (на дату начала)
+      if (!isEdit && current > 0) {
+        const day = (next.dateStart || new Date().toISOString()).slice(0, 10);
+        await addPages(day, current);
+      }
       toast(isEdit ? 'Сохранено' : 'Книга добавлена');
       go(`#/book/${isEdit ? b.id : id}`);
     });

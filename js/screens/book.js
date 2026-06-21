@@ -9,7 +9,7 @@ export async function book(params) {
 
   const pct = progress(b);
   const pred = b.status === 'Читаю' ? predictFinish(b) : null;
-  const unit = b.unit === 'chapters' ? 'гл.' : 'стр.';
+  const unit = 'стр.';
   const info = b.info || {};
   const hasInfo = info.isbn || info.publisher || info.year || info.series;
   const star = (i) => `<i class="ti ti-star${i <= (b.rating || 0) ? ' on' : ''}" data-star="${i}"></i>`;
@@ -65,18 +65,46 @@ export async function book(params) {
       </div>
     </div>`;
 
-  const renderQuotes = (root) => {
-    const wrap = root.querySelector('#bk-quotes');
-    const quotes = b.quotes || [];
-    if (!quotes.length) { wrap.innerHTML = `<div class="muted" style="font-size:13px">Пока нет цитат</div>`; return; }
-    wrap.innerHTML = quotes.map((q, i) => `<div class="card"><div class="quote">«${esc(typeof q === 'string' ? q : q.text)}»</div>
-      <button class="iconbtn ghost" data-delq="${i}" style="float:right;width:28px;height:28px;font-size:15px;margin-top:6px"><i class="ti ti-trash"></i></button></div>`).join('');
-    wrap.querySelectorAll('[data-delq]').forEach((btn) => btn.addEventListener('click', async () => {
-      b.quotes.splice(Number(btn.dataset.delq), 1); await saveBook(b); renderQuotes(root);
-    }));
-  };
-
   const mount = (root) => {
+    // --- цитаты: добавление, редактирование, заметки ---
+    const qText = (q) => (typeof q === 'string' ? q : (q?.text || ''));
+    const qNote = (q) => (q && typeof q === 'object' ? (q.note || '') : '');
+    const renderQuotes = () => {
+      const wrap = root.querySelector('#bk-quotes');
+      const quotes = b.quotes || [];
+      if (!quotes.length) { wrap.innerHTML = `<div class="muted" style="font-size:13px">Пока нет цитат</div>`; return; }
+      wrap.innerHTML = quotes.map((q, i) => `
+        <div class="card quote-card" data-editq="${i}">
+          <div class="quote">«${esc(qText(q))}»</div>
+          ${qNote(q) ? `<div class="quote-note"><i class="ti ti-note"></i> ${esc(qNote(q))}</div>` : ''}
+          <div class="quote-foot"><span class="muted" style="font-size:11px">нажми, чтобы изменить</span>
+            <button class="iconbtn ghost quote-del" data-delq="${i}" aria-label="Удалить"><i class="ti ti-trash"></i></button></div>
+        </div>`).join('');
+      wrap.querySelectorAll('.quote-card').forEach((c) => c.addEventListener('click', () => openQuoteEditor(Number(c.dataset.editq))));
+      wrap.querySelectorAll('[data-delq]').forEach((btn) => btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        b.quotes.splice(Number(btn.dataset.delq), 1); await saveBook(b); renderQuotes(); toast('Цитата удалена');
+      }));
+    };
+    const openQuoteEditor = (index) => {
+      const editing = index != null && index >= 0;
+      const q = editing ? b.quotes[index] : null;
+      const { el, close } = sheet(`<h3>${editing ? 'Цитата' : 'Новая цитата'}</h3>
+        <div class="field"><label>Цитата</label><textarea class="input" id="q-text" placeholder="Текст цитаты">${esc(qText(q))}</textarea></div>
+        <div class="field"><label>Заметка (необязательно)</label><textarea class="input" id="q-note" placeholder="Мысль, контекст, страница…">${esc(qNote(q))}</textarea></div>
+        <button class="btn" id="q-save" style="margin-top:16px">Сохранить</button>`);
+      el.querySelector('#q-text').focus();
+      el.querySelector('#q-save').addEventListener('click', async () => {
+        const text = el.querySelector('#q-text').value.trim();
+        const note = el.querySelector('#q-note').value.trim();
+        if (!text) { close(); return; }
+        b.quotes = b.quotes || [];
+        if (editing) b.quotes[index] = { text, note };
+        else b.quotes.push({ text, note });
+        await saveBook(b); close(); renderQuotes(); toast('Сохранено');
+      });
+    };
+
     root.querySelector('[data-back]').addEventListener('click', () => history.back());
     root.querySelector('#bk-log').addEventListener('click', () => openLogPages(b));
     // быстрый рейтинг по звёздам (1 звезда = 2 балла)
@@ -97,18 +125,8 @@ export async function book(params) {
         await deleteBook(b.id); close(); toast('Книга удалена'); go('#/library');
       });
     });
-    root.querySelector('#bk-addquote').addEventListener('click', () => {
-      const { el, close } = sheet(`<h3>Новая цитата</h3>
-        <textarea class="input" id="q-text" placeholder="Текст цитаты" style="margin-top:12px"></textarea>
-        <button class="btn" id="q-save" style="margin-top:14px">Сохранить</button>`);
-      el.querySelector('#q-save').addEventListener('click', async () => {
-        const text = el.querySelector('#q-text').value.trim();
-        if (!text) return close();
-        b.quotes = b.quotes || []; b.quotes.push({ text });
-        await saveBook(b); close(); renderQuotes(root); toast('Цитата добавлена');
-      });
-    });
-    renderQuotes(root);
+    root.querySelector('#bk-addquote').addEventListener('click', () => openQuoteEditor());
+    renderQuotes();
   };
 
   return { html, mount };

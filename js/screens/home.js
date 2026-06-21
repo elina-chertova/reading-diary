@@ -21,7 +21,7 @@ export async function home() {
       <div class="card hero" data-book="${hero.id}">
         ${coverHTML(hero)}
         <div class="hero-info">
-          <div class="muted" style="font-size:12px">Продолжить · ${hero.current || 0} ${hero.unit === 'chapters' ? 'гл.' : 'стр.'}</div>
+          <div class="muted" style="font-size:12px">Продолжить · ${hero.current || 0} стр.</div>
           <div class="serif" style="font-size:16px;font-weight:500;margin:3px 0 9px;line-height:1.2">${esc(hero.title)}</div>
           <div class="bar"><span style="width:${pct}%"></span></div>
           <div style="font-size:12px;color:var(--acc-2);margin-top:7px">${pct}%${pred ? ` · осталось ~${pred.daysLeft} ${plural(pred.daysLeft, 'день', 'дня', 'дней')}` : ''}</div>

@@ -5,7 +5,7 @@ import { sheet, toast, esc, progress } from './ui.js';
 export function refresh() { if (window.__refresh) window.__refresh(); }
 
 export function openLogPages(book) {
-  const unit = book.unit === 'chapters' ? 'глав' : 'стр.';
+  const unit = 'стр.';
   const max = book.total || 9999;
   const { el, close } = sheet(`
     <h3>«${esc(book.title)}»</h3>
