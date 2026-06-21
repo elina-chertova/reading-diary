@@ -1,6 +1,6 @@
 import { getBook, saveBook, deleteBook } from '../store.js';
 import { predictFinish, plural } from '../stats.js';
-import { coverHTML, progress, esc, fmtDate, go, statusPill, sheet, toast } from '../ui.js';
+import { coverHTML, progress, esc, nl2br, fmtDate, go, statusPill, sheet, toast } from '../ui.js';
 import { openLogPages, refresh } from '../actions.js';
 
 export async function book(params) {
@@ -50,7 +50,7 @@ export async function book(params) {
           <div><span class="muted">Осталось</span><span>~${pred.daysLeft} ${plural(pred.daysLeft, 'день', 'дня', 'дней')}</span></div>` : ''}
         </div>
 
-        ${b.description ? `<div class="sectlabel">Описание</div><div class="card" style="font-size:14px;line-height:1.55;white-space:pre-wrap">${esc(b.description)}</div>` : ''}
+        ${b.description ? `<div class="sectlabel">Описание</div><div class="card" style="font-size:14px;line-height:1.55">${nl2br(b.description)}</div>` : ''}
 
         ${hasInfo ? `<div class="sectlabel">Подробнее</div><div class="card kv">
           ${info.series ? `<div><span class="muted">Серия</span><span>${esc(info.series)}</span></div>` : ''}
@@ -75,8 +75,8 @@ export async function book(params) {
       if (!quotes.length) { wrap.innerHTML = `<div class="muted" style="font-size:13px">Пока нет цитат</div>`; return; }
       wrap.innerHTML = quotes.map((q, i) => `
         <div class="card quote-card" data-editq="${i}">
-          <div class="quote">«${esc(qText(q))}»</div>
-          ${qNote(q) ? `<div class="quote-note"><i class="ti ti-note"></i> ${esc(qNote(q))}</div>` : ''}
+          <div class="quote">«${nl2br(qText(q))}»</div>
+          ${qNote(q) ? `<div class="quote-note"><i class="ti ti-note"></i> <span>${nl2br(qNote(q))}</span></div>` : ''}
           <div class="quote-foot"><span class="muted" style="font-size:11px">нажми, чтобы изменить</span>
             <button class="iconbtn ghost quote-del" data-delq="${i}" aria-label="Удалить"><i class="ti ti-trash"></i></button></div>
         </div>`).join('');

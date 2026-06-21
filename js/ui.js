@@ -8,6 +8,11 @@ export function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+// экранируем и превращаем переносы строк в <br> (любые: \n, \r\n, \r)
+export function nl2br(s) {
+  return esc(s).replace(/\r\n|\r|\n/g, '<br>');
+}
+
 // навигация по hash-роутеру
 export function go(path) { location.hash = path; }
 

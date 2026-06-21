@@ -1,5 +1,5 @@
 // Service worker: офлайн-кэш и установка как приложение.
-const VERSION = 'v24';
+const VERSION = 'v25';
 const SHELL = `shell-${VERSION}`;
 const RUNTIME = `runtime-${VERSION}`;
 
@@ -42,25 +42,28 @@ self.addEventListener('fetch', (e) => {
   }
 
   const sameOrigin = url.origin === self.location.origin;
+  // тяжёлые статичные файлы (шрифт, иконки, картинки) — из кэша (быстро, не меняются)
+  const isStatic = /\.(woff2|woff|ttf|png|jpe?g|svg|ico)$/i.test(url.pathname);
 
-  if (sameOrigin) {
-    // cache-first для своих файлов
+  const cacheThenPut = (res) => {
+    const copy = res.clone();
+    caches.open(RUNTIME).then((c) => c.put(request, copy));
+    return res;
+  };
+
+  if (sameOrigin && !isStatic) {
+    // код (html/js/css/json) — network-first: всегда свежая версия, офлайн — из кэша
     e.respondWith(
-      caches.match(request).then((cached) => cached || fetch(request).then((res) => {
-        const copy = res.clone();
-        caches.open(RUNTIME).then((c) => c.put(request, copy));
-        return res;
-      }).catch(() => cached))
+      fetch(request).then(cacheThenPut).catch(() => caches.match(request).then((c) => c || caches.match('./index.html')))
     );
+  } else if (sameOrigin) {
+    // статика — cache-first
+    e.respondWith(caches.match(request).then((cached) => cached || fetch(request).then(cacheThenPut)));
   } else {
-    // обложки и пр. — network, потом кэш (stale-while-revalidate)
+    // внешнее (обложки) — cache-first с фоновым обновлением
     e.respondWith(
       caches.match(request).then((cached) => {
-        const net = fetch(request).then((res) => {
-          const copy = res.clone();
-          caches.open(RUNTIME).then((c) => c.put(request, copy));
-          return res;
-        }).catch(() => cached);
+        const net = fetch(request).then(cacheThenPut).catch(() => cached);
         return cached || net;
       })
     );
