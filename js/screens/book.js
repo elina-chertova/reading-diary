@@ -50,7 +50,7 @@ export async function book(params) {
           <div><span class="muted">Осталось</span><span>~${pred.daysLeft} ${plural(pred.daysLeft, 'день', 'дня', 'дней')}</span></div>` : ''}
         </div>
 
-        ${b.description ? `<div class="sectlabel">Описание</div><div class="card" style="font-size:14px;line-height:1.55">${esc(b.description)}</div>` : ''}
+        ${b.description ? `<div class="sectlabel">Описание</div><div class="card" style="font-size:14px;line-height:1.55;white-space:pre-wrap">${esc(b.description)}</div>` : ''}
 
         ${hasInfo ? `<div class="sectlabel">Подробнее</div><div class="card kv">
           ${info.series ? `<div><span class="muted">Серия</span><span>${esc(info.series)}</span></div>` : ''}
@@ -90,8 +90,8 @@ export async function book(params) {
       const editing = index != null && index >= 0;
       const q = editing ? b.quotes[index] : null;
       const { el, close } = sheet(`<h3>${editing ? 'Цитата' : 'Новая цитата'}</h3>
-        <div class="field"><label>Цитата</label><textarea class="input" id="q-text" placeholder="Текст цитаты">${esc(qText(q))}</textarea></div>
-        <div class="field"><label>Заметка (необязательно)</label><textarea class="input" id="q-note" placeholder="Мысль, контекст, страница…">${esc(qNote(q))}</textarea></div>
+        <div class="field"><label>Цитата</label><textarea class="input" id="q-text" placeholder="Текст цитаты" style="min-height:110px">${esc(qText(q))}</textarea></div>
+        <div class="field"><label>Комментарий (необязательно)</label><textarea class="input" id="q-note" placeholder="Ваша мысль, контекст, страница…" style="min-height:96px">${esc(qNote(q))}</textarea></div>
         <button class="btn" id="q-save" style="margin-top:16px">Сохранить</button>`);
       el.querySelector('#q-text').focus();
       el.querySelector('#q-save').addEventListener('click', async () => {
