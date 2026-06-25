@@ -59,19 +59,13 @@ export async function edit(params) {
         <div class="field"><label>Дата начала</label><input class="input" id="f-date" type="date" value="${dateVal}" /></div>
         <div class="field"><label>Описание</label><textarea class="input" id="f-desc" placeholder="Заметки о книге">${esc(b.description || '')}</textarea></div>
 
-        <div class="sectlabel">Подробнее (необязательно)</div>
-        <div class="two">
-          <div class="field" style="margin-top:0"><label>Издательство</label><input class="input" id="f-pub" value="${esc(info.publisher || '')}" /></div>
-          <div class="field" style="margin-top:0"><label>Год</label><input class="input" id="f-year" type="number" inputmode="numeric" value="${esc(info.year || '')}" /></div>
-        </div>
-        <div class="field"><label>ISBN</label><input class="input" id="f-isbn" value="${esc(info.isbn || '')}" /></div>
-
         <button class="btn" id="save" style="margin-top:22px">Сохранить</button>
       </div>
     </div>`;
 
   const mount = (root) => {
     let cover = b.cover || null;
+    let pickedInfo = {}; // издательство/год/ISBN из авто-поиска (поля в форме скрыты)
 
     root.querySelector('[data-back]').addEventListener('click', () => history.back());
 
@@ -113,9 +107,8 @@ export async function edit(params) {
           root.querySelector('#f-title').value = r.title;
           root.querySelector('#f-author').value = r.author || '';
           if (r.pageCount) root.querySelector('#f-total').value = r.pageCount;
-          if (r.year) root.querySelector('#f-year').value = r.year;
-          if (r.publisher) root.querySelector('#f-pub').value = r.publisher;
-          if (r.isbn) root.querySelector('#f-isbn').value = r.isbn;
+          // данные из поиска сохраняем тихо (раздел «Подробнее» убран из формы)
+          pickedInfo = { publisher: r.publisher || '', year: r.year || '', isbn: r.isbn || '' };
           resBox.innerHTML = '';
           lookup.value = r.title;
           const coverUrl = r.coverLarge || r.thumbnail;
@@ -148,12 +141,7 @@ export async function edit(params) {
         dateStart: dateStr ? new Date(dateStr).toISOString() : b.dateStart,
         dateEnd: status === 'Прочитано' ? (b.dateEnd || new Date().toISOString()) : (status === 'Читаю' ? null : b.dateEnd),
         description: root.querySelector('#f-desc').value.trim(),
-        info: {
-          ...info,
-          publisher: root.querySelector('#f-pub').value.trim(),
-          year: root.querySelector('#f-year').value.trim(),
-          isbn: root.querySelector('#f-isbn').value.trim(),
-        },
+        info: { ...info, ...pickedInfo },
         lastRead: new Date().toISOString(),
       };
       const id = await saveBook(next);
