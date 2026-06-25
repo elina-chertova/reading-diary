@@ -90,18 +90,13 @@ function pagesTab(st) {
   const series = pagesMode === 'months' ? st.monthlyPages(st.year) : st.yearlyPages.map((y) => y.pages);
   const labels = pagesMode === 'months' ? null : st.yearlyPages.map((y) => String(y.year));
   return `
-    <div class="card wrapped" style="background:#1a1530;text-align:left;padding:16px">
-      <div class="muted" style="font-size:12px">За всё время</div>
-      <div class="row" style="gap:18px;margin-top:6px">
-        <div><div style="font-size:28px;font-weight:700;color:var(--acc-2)">${fmtNum(st.allTimePages)}</div><div class="muted" style="font-size:12px">страниц</div></div>
-        <div><div style="font-size:28px;font-weight:700">${st.totalFinished}</div><div class="muted" style="font-size:12px">книг прочитано</div></div>
-      </div>
+    <div class="sublabel">Прочитано страниц</div>
+    <div class="tiles">
+      <div class="tile"><div class="v">${fmtNum(st.thisMonthPages)}</div><div class="l">за месяц</div></div>
+      <div class="tile"><div class="v">${fmtNum(st.thisYearPages)}</div><div class="l">за год</div></div>
+      <div class="tile"><div class="v">${fmtNum(st.allTimePages)}</div><div class="l">за всё время</div></div>
     </div>
-    <div class="tiles" style="margin-top:12px">
-      <div class="tile"><div class="v">${fmtNum(st.thisMonthPages)}</div><div class="l">в этом месяце</div></div>
-      <div class="tile"><div class="v">${fmtNum(st.thisYearPages)}</div><div class="l">в этом году</div></div>
-      <div class="tile"><div class="v">${fmtNum(st.avgPerMonth)}</div><div class="l">в среднем/мес</div></div>
-    </div>
+    <div class="muted" style="font-size:12px;margin:8px 4px 0">В среднем ${fmtNum(st.avgPerMonth)} стр./мес</div>
     <div class="seg" id="st-pmode" style="margin:14px 0 10px;max-width:240px">
       <button data-pmode="months" class="${pagesMode === 'months' ? 'on' : ''}">По месяцам</button>
       <button data-pmode="years" class="${pagesMode === 'years' ? 'on' : ''}">По годам</button>
@@ -118,11 +113,13 @@ function booksTab(st) {
   const authors = st.topAuthors;
   const maxRating = Math.max(1, ...st.ratingDist.map((r) => r.count));
   return `
+    <div class="sublabel">Прочитано книг</div>
     <div class="tiles">
-      <div class="tile"><div class="v">${st.thisYearBooks}</div><div class="l">в этом году</div></div>
-      <div class="tile"><div class="v">${st.totalFinished}</div><div class="l">всего</div></div>
-      <div class="tile"><div class="v">${st.dropped}</div><div class="l">брошено</div></div>
+      <div class="tile"><div class="v">${st.thisMonthBooks}</div><div class="l">за месяц</div></div>
+      <div class="tile"><div class="v">${st.thisYearBooks}</div><div class="l">за год</div></div>
+      <div class="tile"><div class="v">${st.totalFinished}</div><div class="l">за всё время</div></div>
     </div>
+    <div class="muted" style="font-size:12px;margin:8px 4px 0">Брошено: ${st.dropped}</div>
     <div class="card" data-unit="books" id="chart-books" style="margin-top:12px"><div class="muted" style="font-size:12px;margin-bottom:8px">Книг по месяцам · ${st.year}</div><div class="chart-area"></div><div class="chart-readout"><i class="ti ti-hand-finger"></i> Нажми на столбец — покажет книги</div></div>
     <div class="card" style="margin-top:12px">
       <div class="muted" style="font-size:12px;margin-bottom:11px">По жанрам</div>

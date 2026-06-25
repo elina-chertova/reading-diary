@@ -85,6 +85,7 @@ input, select, textarea { font-family: inherit; }
 .stack > * + * { margin-top: 12px; }
 .serif { font-family: ui-serif, Georgia, "Times New Roman", serif; }
 .sectlabel { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin: 22px 4px 10px; }
+.sublabel { font-size: 14px; color: var(--txt); font-weight: 500; margin: 2px 4px 10px; }
 
 /* buttons */
 .btn {

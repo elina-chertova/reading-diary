@@ -35,6 +35,7 @@ export function computeStats(books, tracker, settings = {}) {
 
   // --- книги ---
   const thisYearBooks = finished.filter((b) => yearOf(b.dateEnd) === year).length;
+  const thisMonthBooks = finished.filter((b) => b.dateEnd && yearOf(b.dateEnd) === year && ymd(b.dateEnd).getMonth() === month).length;
   const totalFinished = finished.length;
 
   // --- серия дней ---
@@ -128,7 +129,7 @@ export function computeStats(books, tracker, settings = {}) {
   return {
     year, month,
     allTimePages, thisYearPages, thisMonthPages, avgPerMonth,
-    totalFinished, thisYearBooks,
+    totalFinished, thisYearBooks, thisMonthBooks,
     streak, streakRecord,
     weekday, peakWd,
     genres, favGenre, bestRatedGenre,
