@@ -1,5 +1,5 @@
 // Service worker: мгновенная загрузка из кэша + тихое обновление в фоне.
-const VERSION = 'v35';
+const VERSION = 'v36';
 const CACHE = `app-${VERSION}`;
 
 const CORE = [
@@ -11,6 +11,23 @@ const CORE = [
   './fonts/tabler-icons.woff2',
   './js/seed.json',
   './icons/icon.svg',
+  // все модули приложения — чтобы загрузка всегда была из кэша (мгновенно), а не из сети
+  './js/app.js',
+  './js/db.js',
+  './js/store.js',
+  './js/stats.js',
+  './js/charts.js',
+  './js/ui.js',
+  './js/covers.js',
+  './js/actions.js',
+  './js/share.js',
+  './js/screens/home.js',
+  './js/screens/library.js',
+  './js/screens/book.js',
+  './js/screens/edit.js',
+  './js/screens/stats.js',
+  './js/screens/calendar.js',
+  './js/screens/settings.js',
 ];
 
 self.addEventListener('install', (e) => {
