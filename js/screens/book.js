@@ -28,7 +28,7 @@ export async function book(params) {
           <div class="stars ten" id="bk-stars" style="justify-content:center;margin-top:10px">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(star).join('')}</div>
           <div class="muted" id="bk-rating-num" style="font-size:12px;margin-top:5px">${b.rating ? b.rating + ' из 10' : 'Поставь оценку'}</div>
           <div class="row" style="gap:6px;justify-content:center;margin-top:12px">
-            ${statusPill(b.status)}<span class="pill">${esc(b.genre)}</span><span class="pill">${esc(b.format)}</span>
+            ${statusPill(b.status)}
           </div>
         </div>
 
@@ -43,6 +43,8 @@ export async function book(params) {
         </div>`}
 
         <div class="card kv" style="margin-top:12px">
+          <div><span class="muted">Жанр</span><span>${esc(b.genre)}</span></div>
+          <div><span class="muted">Тип</span><span>${esc(b.format)}</span></div>
           <div><span class="muted">Начато</span><span>${fmtDate(b.dateStart)}</span></div>
           ${b.dateEnd ? `<div><span class="muted">Завершено</span><span>${fmtDate(b.dateEnd)}</span></div>` : ''}
           ${b.total ? `<div><span class="muted">Объём</span><span>${b.total} ${unit}</span></div>` : ''}
