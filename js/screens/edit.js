@@ -1,6 +1,6 @@
 import { getBook, saveBook, getSettings, addPages } from '../store.js';
 import { searchBooks, resolveCover, blobToDataURL } from '../covers.js';
-import { coverHTML, esc, go, toast, STATUSES, FORMATS, GENRES } from '../ui.js';
+import { coverHTML, esc, toast, STATUSES, FORMATS, GENRES } from '../ui.js';
 
 let searchTimer = null;
 
@@ -163,7 +163,14 @@ export async function edit(params) {
         await addPages(day, current);
       }
       toast(isEdit ? 'Сохранено' : 'Книга добавлена');
-      go(`#/book/${isEdit ? b.id : id}`);
+      if (isEdit) {
+        // вернуться назад на карточку книги (откуда зашли), без лишней записи в истории
+        history.back();
+      } else {
+        // заменить запись «#/add» карточкой новой книги — чтобы «назад» вёл в библиотеку
+        history.replaceState(null, '', `#/book/${id}`);
+        if (window.__refresh) window.__refresh();
+      }
     });
   };
 
