@@ -77,6 +77,7 @@ export async function edit(params) {
     // загрузка фото
     const fileInput = root.querySelector('#photo-input');
     root.querySelector('#pick-photo').addEventListener('click', () => fileInput.click());
+    root.querySelector('#cover-prev').addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', async () => {
       const file = fileInput.files[0];
       if (!file) return;
