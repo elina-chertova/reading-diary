@@ -1,5 +1,5 @@
 // Service worker: офлайн-кэш и установка как приложение.
-const VERSION = 'v28';
+const VERSION = 'v32';
 const SHELL = `shell-${VERSION}`;
 const RUNTIME = `runtime-${VERSION}`;
 
@@ -42,8 +42,8 @@ self.addEventListener('fetch', (e) => {
   }
 
   const sameOrigin = url.origin === self.location.origin;
-  // тяжёлые статичные файлы (шрифт, иконки, картинки) — из кэша (быстро, не меняются)
-  const isStatic = /\.(woff2|woff|ttf|png|jpe?g|svg|ico)$/i.test(url.pathname);
+  // тяжёлые статичные файлы (шрифт, иконки, картинки, вендор-библиотеки) — из кэша (быстро, не меняются)
+  const isStatic = /\.(woff2|woff|ttf|png|jpe?g|svg|ico)$/i.test(url.pathname) || url.pathname.includes('/vendor/');
 
   const cacheThenPut = (res) => {
     const copy = res.clone();

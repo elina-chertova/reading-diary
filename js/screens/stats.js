@@ -3,6 +3,7 @@ import { computeStats, plural, monthShort } from '../stats.js';
 import { lineChart, barChart, ring, weekdayBars, genreBreakdown } from '../charts.js';
 import { navBar, esc, fmtNum, sheet, toast, coverHTML, monthName, go } from '../ui.js';
 import { refresh } from '../actions.js';
+import { shareStats } from '../share.js';
 
 let tab = 'pages';
 let pagesMode = 'months';
@@ -36,7 +37,10 @@ export async function stats() {
   const html = `
     <div class="screen">
       <div class="topbar"><h1>Статистика</h1>
-        <div class="topbar-actions"><span class="pill">${st.year}</span></div>
+        <div class="topbar-actions">
+          <span class="pill">${st.year}</span>
+          <button class="iconbtn" id="st-share" aria-label="Поделиться"><i class="ti ti-share"></i></button>
+        </div>
       </div>
       <div class="content">
         <button class="collapse-head ${insightsOpen ? 'open' : ''}" id="ins-toggle">
@@ -75,6 +79,7 @@ export async function stats() {
       root.querySelectorAll('#st-tabs button').forEach((x) => x.classList.toggle('on', x === btn));
       renderBody();
     }));
+    root.querySelector('#st-share').addEventListener('click', () => shareStats(st, { onStatus: (m) => m && toast(m) }));
   };
 
   return { html, mount };
