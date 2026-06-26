@@ -112,7 +112,7 @@ export async function shareStats(st, { onStatus } = {}) {
     if (!blob) throw new Error('blob');
     const file = new File([blob], 'статистика-чтения.png', { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: 'Моя статистика чтения', text: 'Моя статистика чтения 📚' }); } catch { /* отмена — не ошибка */ }
+      try { await navigator.share({ files: [file] }); } catch { /* отмена — не ошибка */ }
       onStatus && onStatus('');
     } else {
       const url = URL.createObjectURL(blob);
@@ -252,7 +252,7 @@ export async function exportStatsPDF(st, { onStatus } = {}) {
     const blob = pdf.output('blob');
     const file = new File([blob], 'статистика-чтения.pdf', { type: 'application/pdf' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: 'Статистика чтения' }); } catch { /* отмена */ }
+      try { await navigator.share({ files: [file] }); } catch { /* отмена */ }
       onStatus && onStatus('');
     } else {
       const url = URL.createObjectURL(blob);
