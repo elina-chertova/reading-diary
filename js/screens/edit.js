@@ -93,6 +93,7 @@ export async function edit(params) {
       clearTimeout(searchTimer);
       const q = lookup.value.trim();
       if (q.length < 3) { resBox.innerHTML = ''; return; }
+      if (navigator.onLine === false) { resBox.innerHTML = `<div class="muted" style="font-size:12px;padding:6px"><i class="ti ti-info-circle"></i> Поиск книг работает только онлайн — заполни вручную</div>`; return; }
       resBox.innerHTML = `<div class="muted" style="font-size:12px;padding:6px">Ищу…</div>`;
       searchTimer = setTimeout(async () => {
         const results = await searchBooks(q);

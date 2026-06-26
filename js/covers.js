@@ -1,16 +1,42 @@
-// Авто-поиск книг и обложек. Основной источник — Open Library (хорошо знает
-// русские книги), запасной — Google Books. Оба бесплатны и без ключа.
+// Авто-поиск книг и обложек по нескольким базам сразу (Open Library + Google Books),
+// результаты объединяются и чистятся от дублей. Оба источника бесплатны и без ключа.
+// Офлайн поиск недоступен (нет сети) — возвращаем пусто, форма заполняется вручную.
+
+// если источник не ответил за timeout — не ждём его (чтобы поиск был быстрым)
+const timed = (p, ms) => Promise.race([p, new Promise((res) => setTimeout(() => res([]), ms))]);
 
 export async function searchBooks(query) {
   if (!query || query.trim().length < 2) return [];
-  const ol = await searchOpenLibrary(query);
-  if (ol.length) return ol;
-  return searchGoogle(query);
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return [];
+  const [ol, gb] = await Promise.all([
+    timed(searchOpenLibrary(query).catch(() => []), 5000),  // основной источник
+    timed(searchGoogle(query).catch(() => []), 3000),       // доп. источник — не ждём долго
+  ]);
+  return dedupe([...ol, ...gb]).slice(0, 12);
+}
+
+const norm = (s) => (s || '').toLowerCase().replace(/[«»"'.,!?:;()\[\]\-–—]/g, '').replace(/\s+/g, ' ').trim();
+
+// объединяем результаты разных баз: дубли по «название|автор», предпочитаем с обложкой
+function dedupe(items) {
+  const map = new Map();
+  for (const it of items) {
+    if (!it.title) continue;
+    const key = norm(it.title) + '|' + norm(it.author);
+    const ex = map.get(key);
+    if (!ex) { map.set(key, { ...it }); continue; }
+    if (!ex.thumbnail && it.thumbnail) { ex.thumbnail = it.thumbnail; ex.coverLarge = it.coverLarge; }
+    if (!ex.pageCount && it.pageCount) ex.pageCount = it.pageCount;
+    if (!ex.year && it.year) ex.year = it.year;
+    if (!ex.isbn && it.isbn) ex.isbn = it.isbn;
+    if (!ex.publisher && it.publisher) ex.publisher = it.publisher;
+  }
+  return [...map.values()].sort((a, b) => (b.thumbnail ? 1 : 0) - (a.thumbnail ? 1 : 0));
 }
 
 async function searchOpenLibrary(query) {
   try {
-    const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=6&fields=title,author_name,first_publish_year,cover_i,number_of_pages_median,isbn,publisher`;
+    const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=8&fields=title,author_name,first_publish_year,cover_i,number_of_pages_median,isbn,publisher`;
     const res = await fetch(url);
     if (!res.ok) return [];
     const data = await res.json();
@@ -29,7 +55,7 @@ async function searchOpenLibrary(query) {
 
 async function searchGoogle(query) {
   try {
-    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=6&printType=books`);
+    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=8&printType=books`);
     if (!res.ok) return [];
     const data = await res.json();
     return (data.items || []).map((it) => {
