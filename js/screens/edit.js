@@ -3,6 +3,7 @@ import { searchBooks, resolveCover, blobToDataURL } from '../covers.js';
 import { coverHTML, esc, toast, STATUSES, FORMATS, GENRES } from '../ui.js';
 
 let searchTimer = null;
+let searchSeq = 0;
 
 export async function edit(params) {
   const isEdit = !!params.id;
@@ -89,34 +90,38 @@ export async function edit(params) {
     // авто-поиск
     const lookup = root.querySelector('#lookup');
     const resBox = root.querySelector('#lookup-res');
+    const renderResults = (results) => {
+      resBox.innerHTML = results.map((r, i) => `
+        <button class="lookup-item" data-i="${i}">
+          ${r.thumbnail ? `<div class="cover" style="background-image:url('${r.thumbnail}')"></div>` : `<div class="cover" style="background:#3c3489"></div>`}
+          <div style="flex:1;min-width:0"><div class="ttl">${esc(r.title)}</div><div class="meta">${esc(r.author || '')}${r.pageCount ? ' · ' + r.pageCount + ' стр.' : ''}${r.year ? ' · ' + r.year : ''}</div></div>
+          <i class="ti ti-plus" style="color:var(--acc-2)"></i>
+        </button>`).join('');
+      resBox.querySelectorAll('.lookup-item').forEach((el) => el.addEventListener('click', async () => {
+        const r = results[Number(el.dataset.i)];
+        root.querySelector('#f-title').value = r.title;
+        root.querySelector('#f-author').value = r.author || '';
+        if (r.pageCount) root.querySelector('#f-total').value = r.pageCount;
+        pickedInfo = { publisher: r.publisher || '', year: r.year || '', isbn: r.isbn || '' };
+        resBox.innerHTML = '';
+        lookup.value = r.title;
+        const coverUrl = r.coverLarge || r.thumbnail;
+        if (coverUrl) { toast('Подгружаю обложку…'); setCover(await resolveCover(coverUrl), getFormValues()); }
+      }));
+    };
+
     lookup?.addEventListener('input', () => {
       clearTimeout(searchTimer);
       const q = lookup.value.trim();
       if (q.length < 3) { resBox.innerHTML = ''; return; }
       if (navigator.onLine === false) { resBox.innerHTML = `<div class="muted" style="font-size:12px;padding:6px"><i class="ti ti-info-circle"></i> Поиск книг работает только онлайн — заполни вручную</div>`; return; }
       resBox.innerHTML = `<div class="muted" style="font-size:12px;padding:6px">Ищу…</div>`;
-      searchTimer = setTimeout(async () => {
-        const results = await searchBooks(q);
-        if (!results.length) { resBox.innerHTML = `<div class="muted" style="font-size:12px;padding:6px">Ничего не нашлось — заполни вручную</div>`; return; }
-        resBox.innerHTML = results.map((r, i) => `
-          <button class="lookup-item" data-i="${i}">
-            ${r.thumbnail ? `<div class="cover" style="background-image:url('${r.thumbnail}')"></div>` : `<div class="cover" style="background:#3c3489"></div>`}
-            <div style="flex:1;min-width:0"><div class="ttl">${esc(r.title)}</div><div class="meta">${esc(r.author || '')}${r.pageCount ? ' · ' + r.pageCount + ' стр.' : ''}${r.year ? ' · ' + r.year : ''}</div></div>
-            <i class="ti ti-plus" style="color:var(--acc-2)"></i>
-          </button>`).join('');
-        resBox.querySelectorAll('.lookup-item').forEach((el) => el.addEventListener('click', async () => {
-          const r = results[Number(el.dataset.i)];
-          root.querySelector('#f-title').value = r.title;
-          root.querySelector('#f-author').value = r.author || '';
-          if (r.pageCount) root.querySelector('#f-total').value = r.pageCount;
-          // данные из поиска сохраняем тихо (раздел «Подробнее» убран из формы)
-          pickedInfo = { publisher: r.publisher || '', year: r.year || '', isbn: r.isbn || '' };
-          resBox.innerHTML = '';
-          lookup.value = r.title;
-          const coverUrl = r.coverLarge || r.thumbnail;
-          if (coverUrl) { toast('Подгружаю обложку…'); setCover(await resolveCover(coverUrl), getFormValues()); }
-        }));
-      }, 450);
+      const mySeq = ++searchSeq;
+      searchTimer = setTimeout(() => {
+        // результаты показываем сразу, как только ответит первый источник
+        searchBooks(q, (partial) => { if (mySeq === searchSeq && partial.length) renderResults(partial); })
+          .then((final) => { if (mySeq === searchSeq && !final.length) resBox.innerHTML = `<div class="muted" style="font-size:12px;padding:6px">Ничего не нашлось — заполни вручную</div>`; });
+      }, 350);
     });
 
     const getFormValues = () => ({

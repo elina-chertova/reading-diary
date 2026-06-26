@@ -5,14 +5,20 @@
 // если источник не ответил за timeout — не ждём его (чтобы поиск был быстрым)
 const timed = (p, ms) => Promise.race([p, new Promise((res) => setTimeout(() => res([]), ms))]);
 
-export async function searchBooks(query) {
+// onPartial вызывается, как только ответил каждый источник — результаты появляются сразу,
+// не дожидаясь самого медленного. Возвращает итоговый объединённый список.
+export async function searchBooks(query, onPartial) {
   if (!query || query.trim().length < 2) return [];
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return [];
-  const [ol, gb] = await Promise.all([
-    timed(searchOpenLibrary(query).catch(() => []), 5000),  // основной источник
-    timed(searchGoogle(query).catch(() => []), 3000),       // доп. источник — не ждём долго
+  let merged = [];
+  const add = (res) => {
+    if (res && res.length) { merged = dedupe([...merged, ...res]); onPartial && onPartial(merged.slice(0, 12)); }
+  };
+  await Promise.all([
+    timed(searchOpenLibrary(query).catch(() => []), 6000).then(add),
+    timed(searchGoogle(query).catch(() => []), 6000).then(add),
   ]);
-  return dedupe([...ol, ...gb]).slice(0, 12);
+  return merged.slice(0, 12);
 }
 
 const norm = (s) => (s || '').toLowerCase().replace(/[«»"'.,!?:;()\[\]\-–—]/g, '').replace(/\s+/g, ' ').trim();
