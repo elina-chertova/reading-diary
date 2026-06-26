@@ -3,7 +3,7 @@ import { computeStats, plural, monthShort } from '../stats.js';
 import { lineChart, barChart, ring, weekdayBars, genreBreakdown } from '../charts.js';
 import { navBar, esc, fmtNum, sheet, toast, coverHTML, monthName, go } from '../ui.js';
 import { refresh } from '../actions.js';
-import { shareStats } from '../share.js';
+import { shareStats, exportStatsPDF } from '../share.js';
 
 let tab = 'pages';
 let pagesMode = 'months';
@@ -79,7 +79,13 @@ export async function stats() {
       root.querySelectorAll('#st-tabs button').forEach((x) => x.classList.toggle('on', x === btn));
       renderBody();
     }));
-    root.querySelector('#st-share').addEventListener('click', () => shareStats(st, { onStatus: (m) => m && toast(m) }));
+    root.querySelector('#st-share').addEventListener('click', () => {
+      const { el, close } = sheet(`<h3>Поделиться</h3>
+        <button class="btn sec" id="exp-img" style="margin-top:12px"><i class="ti ti-photo"></i> Картинка-карточка</button>
+        <button class="btn sec" id="exp-pdf" style="margin-top:10px"><i class="ti ti-download"></i> PDF-отчёт (вся статистика)</button>`);
+      el.querySelector('#exp-img').addEventListener('click', () => { close(); shareStats(st, { onStatus: (m) => m && toast(m) }); });
+      el.querySelector('#exp-pdf').addEventListener('click', () => { close(); exportStatsPDF(st, { onStatus: (m) => m && toast(m) }); });
+    });
   };
 
   return { html, mount };
