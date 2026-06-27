@@ -1,5 +1,5 @@
 // Service worker: мгновенная загрузка из кэша + тихое обновление в фоне.
-const VERSION = 'v40';
+const VERSION = 'v41';
 const CACHE = `app-${VERSION}`;
 
 const CORE = [
